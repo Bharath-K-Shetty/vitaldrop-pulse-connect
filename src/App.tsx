@@ -14,6 +14,15 @@ import Emergency from "./pages/Emergency";
 import NotFound from "./pages/NotFound";
 import AuthModal from "./components/AuthModal";
 
+// Create interface props for pages that need authentication
+interface AuthPageProps {
+  isAuthenticated: boolean;
+  onOpenAuthModal: () => void;
+  onLogout: () => void;
+  pulseCredits?: number; 
+  onSendCredits?: (amount: number) => void;
+}
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -52,6 +61,15 @@ const App = () => {
     setPulseCredits(prev => prev + amount);
   };
   
+  // Standard auth props to pass to pages
+  const authProps: AuthPageProps = {
+    isAuthenticated,
+    onOpenAuthModal: () => setShowAuthModal(true),
+    onLogout: handleLogout,
+    pulseCredits,
+    onSendCredits: handleSendCredits
+  };
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -61,27 +79,11 @@ const App = () => {
           <Routes>
             <Route 
               path="/" 
-              element={
-                <Index 
-                  isAuthenticated={isAuthenticated}
-                  onOpenAuthModal={() => setShowAuthModal(true)}
-                  onLogout={handleLogout}
-                  pulseCredits={pulseCredits}
-                  onSendCredits={handleSendCredits}
-                />
-              } 
+              element={<Index {...authProps} />} 
             />
             <Route 
               path="/dashboard" 
-              element={
-                <Dashboard 
-                  isAuthenticated={isAuthenticated}
-                  onOpenAuthModal={() => setShowAuthModal(true)}
-                  onLogout={handleLogout}
-                  pulseCredits={pulseCredits}
-                  onSendCredits={handleSendCredits}
-                />
-              } 
+              element={<Dashboard />} 
             />
             <Route 
               path="/profile" 
