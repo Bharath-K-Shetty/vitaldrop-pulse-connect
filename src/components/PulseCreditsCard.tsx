@@ -4,11 +4,12 @@ import { Heart } from "lucide-react";
 
 interface PulseCreditsCardProps {
   credits: number;
+  className?: string;
 }
 
-const PulseCreditsCard = ({ credits }: PulseCreditsCardProps) => {
+const PulseCreditsCard = ({ credits, className }: PulseCreditsCardProps) => {
   return (
-    <Card className="relative overflow-hidden">
+    <Card className={`relative overflow-hidden hover:shadow-md transition-all ${className}`}>
       <div className="absolute top-0 right-0 p-2">
         <Heart className="h-5 w-5 text-primary" />
       </div>
@@ -18,7 +19,7 @@ const PulseCreditsCard = ({ credits }: PulseCreditsCardProps) => {
       <CardContent>
         <div className="flex items-center">
           <div className="relative">
-            <div className="text-3xl font-bold">{credits}</div>
+            <div className="text-3xl font-bold bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">{credits}</div>
             <div className="text-sm text-gray-500">Available credits</div>
           </div>
         </div>
