@@ -69,7 +69,10 @@ const Index = ({
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <PulseCreditsCard credits={pulseCredits} />
+                <PulseCreditsCard 
+                  credits={pulseCredits} 
+                  onSendCredits={() => setShowSendCredits(true)}
+                />
                 <UpcomingDonation isEligible={true} />
                 
                 <div className="md:col-span-3">

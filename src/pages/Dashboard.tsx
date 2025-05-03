@@ -9,11 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import PulseCreditsCard from "@/components/PulseCreditsCard";
 import UpcomingDonation from "@/components/UpcomingDonation";
 import DonationHistory from "@/components/DonationHistory";
+import SendCreditsModal from "@/components/SendCreditsModal";
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [pulseCredits, setPulseCredits] = useState(12);
   const [isEligible, setIsEligible] = useState(true);
+  const [showSendCredits, setShowSendCredits] = useState(false);
   
   // Simulated emergency alert
   useEffect(() => {
@@ -46,6 +48,15 @@ const Dashboard = () => {
     }
   };
   
+  const handleSendCredits = (amount: number) => {
+    setPulseCredits(prev => prev - amount);
+    toast({
+      title: "Credits Sent",
+      description: `You've sent ${amount} Pulse Credit${amount > 1 ? 's' : ''} successfully.`
+    });
+    setShowSendCredits(false);
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -55,7 +66,10 @@ const Dashboard = () => {
           
           {/* Top cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <PulseCreditsCard credits={pulseCredits} />
+            <PulseCreditsCard 
+              credits={pulseCredits} 
+              onSendCredits={() => setShowSendCredits(true)}
+            />
             
             <UpcomingDonation isEligible={isEligible} />
             
@@ -99,10 +113,7 @@ const Dashboard = () => {
               <Button 
                 variant="outline" 
                 className="flex flex-col items-center justify-center h-24 border-2"
-                onClick={() => toast({
-                  title: "Coming Soon",
-                  description: "This feature will be available soon"
-                })}
+                onClick={() => setShowSendCredits(true)}
               >
                 <Send className="h-6 w-6 mb-2" />
                 <span>Send Credits</span>
@@ -137,6 +148,15 @@ const Dashboard = () => {
         </div>
       </main>
       <Footer />
+      
+      {showSendCredits && (
+        <SendCreditsModal 
+          isOpen={showSendCredits}
+          onClose={() => setShowSendCredits(false)}
+          creditBalance={pulseCredits}
+          onSendCredits={handleSendCredits}
+        />
+      )}
     </div>
   );
 };
