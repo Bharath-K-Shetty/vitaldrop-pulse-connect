@@ -20,7 +20,8 @@ const initialCommunities = [
     bloodType: "O+",
     isJoined: true,
     activeRequests: 3,
-    lastActivity: "2 hours ago"
+    lastActivity: "2 hours ago",
+    unreadMessages: 3
   },
   {
     id: 2,
@@ -110,11 +111,19 @@ const Communities = ({
   
   const handleJoinCommunity = (id: number) => {
     setCommunities(prev => 
-      prev.map(community => 
-        community.id === id 
-          ? { ...community, isJoined: !community.isJoined } 
-          : community
-      )
+      prev.map(community => {
+        if (community.id === id) {
+          // Reset unread messages to 0 when joining
+          const isJoined = !community.isJoined;
+          return { 
+            ...community, 
+            isJoined,
+            // Clear unread messages when leaving
+            unreadMessages: isJoined ? community.unreadMessages : undefined
+          };
+        }
+        return community;
+      })
     );
     
     const community = communities.find(c => c.id === id);
