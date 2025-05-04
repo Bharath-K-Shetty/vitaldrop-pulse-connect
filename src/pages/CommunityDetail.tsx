@@ -1,18 +1,34 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatInterface from "@/components/ChatInterface";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, MapPin, Calendar, ArrowUp, Bell } from "lucide-react";
+import { Users, MapPin, Calendar, ArrowUp, Bell, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import CommunityMembers from "@/components/CommunityMembers";
 
-const CommunityDetail = () => {
+interface CommunityDetailProps {
+  isAuthenticated?: boolean;
+  onOpenAuthModal?: () => void;
+  onLogout?: () => void;
+}
+
+const CommunityDetail = ({ 
+  isAuthenticated = false, 
+  onOpenAuthModal, 
+  onLogout 
+}: CommunityDetailProps) => {
   const { id } = useParams<{ id: string }>();
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
   const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Mock community data - in a real app, this would be fetched based on the ID
   const community = {
@@ -47,6 +63,19 @@ const CommunityDetail = () => {
     }
   ]);
   
+  // List of members
+  const members = [
+    { id: 1, name: "Dr. Sarah Johnson", initials: "SJ", role: "Admin", status: "online", lastActive: "Now" },
+    { id: 2, name: "James Wilson", initials: "JW", role: "Member", status: "online", lastActive: "Now" },
+    { id: 3, name: "Emma Davis", initials: "ED", role: "Member", status: "offline", lastActive: "1h ago" },
+    { id: 4, name: "Michael Chen", initials: "MC", role: "Member", status: "offline", lastActive: "3h ago" },
+    { id: 5, name: "Olivia Martinez", initials: "OM", role: "Member", status: "online", lastActive: "Now" },
+    // Added more members to demonstrate scrolling
+    { id: 6, name: "Noah Williams", initials: "NW", role: "Member", status: "offline", lastActive: "Yesterday" },
+    { id: 7, name: "Sophia Brown", initials: "SB", role: "Member", status: "offline", lastActive: "2d ago" },
+    { id: 8, name: "Liam Garcia", initials: "LG", role: "Member", status: "online", lastActive: "Now" }
+  ];
+  
   // Handle scroll events
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setShowBackToTop(e.currentTarget.scrollTop > 300);
@@ -68,10 +97,26 @@ const CommunityDetail = () => {
       description: "Thank you for responding to this emergency request. The team will contact you shortly."
     });
   };
+
+  // When we first load, mark messages as read
+  useEffect(() => {
+    if (unreadCount > 0) {
+      setUnreadCount(0);
+    }
+  }, [unreadCount]);
+
+  // Toggle member list view
+  const toggleMembersList = () => {
+    setShowMembers(!showMembers);
+  };
   
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-rose-50">
-      <Navbar />
+      <Navbar 
+        isAuthenticated={isAuthenticated}
+        onOpenAuthModal={onOpenAuthModal}
+        onLogout={onLogout}
+      />
       <main className="flex-grow" onScroll={handleScroll}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6 flex justify-between items-center">
@@ -89,17 +134,37 @@ const CommunityDetail = () => {
                 {community.name}
               </h1>
             </div>
-            <Button 
-              variant={community.isJoined ? "outline" : "default"}
-              className={!community.isJoined ? "bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 transition-opacity" : ""}
-            >
-              {community.isJoined ? "Leave Community" : "Join Community"}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={toggleMembersList}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Members</span>
+                <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {members.filter(m => m.status === "online").length}
+                </span>
+              </Button>
+              <Button 
+                variant={community.isJoined ? "outline" : "default"}
+                className={!community.isJoined ? "bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 transition-opacity" : ""}
+              >
+                {community.isJoined ? "Leave Community" : "Join Community"}
+              </Button>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <ChatInterface communityName={community.name} />
+              {showMembers ? (
+                <CommunityMembers 
+                  members={members}
+                  onClose={toggleMembersList}
+                />
+              ) : (
+                <ChatInterface communityName={community.name} />
+              )}
             </div>
             
             <div className="space-y-6">
@@ -124,6 +189,10 @@ const CommunityDetail = () => {
                     <div className="flex items-center text-sm">
                       <Calendar className="h-4 w-4 mr-2 text-primary" />
                       <span>Last activity: {community.lastActivity}</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <MessageCircle className="h-4 w-4 mr-2 text-primary" />
+                      <span>Active chats: {members.filter(m => m.status === "online").length}</span>
                     </div>
                   </div>
                 </CardContent>

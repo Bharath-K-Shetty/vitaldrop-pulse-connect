@@ -149,4 +149,52 @@
   .bg-gradient-primary {
     @apply bg-gradient-to-r from-primary to-rose-500;
   }
+  
+  /* Chat specific utilities */
+  .chat-bubble-user {
+    @apply bg-gradient-to-r from-primary to-rose-500 text-white rounded-xl rounded-tr-none;
+  }
+  
+  .chat-bubble-other {
+    @apply bg-white border border-gray-100 rounded-xl rounded-tl-none;
+  }
+  
+  .chat-bubble-system {
+    @apply bg-gradient-to-r from-amber-100 to-amber-200 border border-amber-300 rounded-xl;
+  }
+  
+  .typing-indicator {
+    @apply flex space-x-1;
+  }
+  
+  .typing-indicator-dot {
+    @apply w-2 h-2 bg-primary rounded-full;
+    animation: typing-animation 1.4s infinite both;
+  }
+  
+  .typing-indicator-dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  
+  .typing-indicator-dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  
+  @keyframes typing-animation {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  
+  /* Glassmorphism utilities */
+  .glass {
+    @apply bg-white/60 backdrop-blur-sm border border-white/20 shadow-md;
+  }
+  
+  .glass-dark {
+    @apply bg-gray-900/60 backdrop-blur-sm border border-gray-800/30 shadow-md;
+  }
 }

@@ -19,8 +19,8 @@ interface AuthPageProps {
   isAuthenticated: boolean;
   onOpenAuthModal: () => void;
   onLogout: () => void;
-  pulseCredits: number; // Made this required to fix TS error
-  onSendCredits: (amount: number) => void; // Made this required to fix TS error
+  pulseCredits: number;
+  onSendCredits: (amount: number) => void;
 }
 
 // Props for pages that don't need pulse credits
@@ -114,7 +114,7 @@ const App = () => {
             <Route 
               path="/communities/:id" 
               element={
-                <CommunityDetail />
+                <CommunityDetail {...basicAuthProps} />
               } 
             />
             <Route 
