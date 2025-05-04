@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import CommunityCard from "@/components/CommunityCard";
 import CommunityFeed from "@/components/CommunityFeed";
 import CommunitySearch from "@/components/CommunitySearch";
+import CreateCommunityModal from "@/components/CreateCommunityModal";
 
 // Mock data for communities
 const initialCommunities = [
@@ -104,7 +106,7 @@ const Communities = ({
   const { toast } = useToast();
   const [communities, setCommunities] = useState(initialCommunities);
   const [searchTerm, setSearchTerm] = useState("");
-  const [newPost, setNewPost] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   
   const handleJoinCommunity = (id: number) => {
     setCommunities(prev => 
@@ -132,6 +134,28 @@ const Communities = ({
     });
   };
   
+  const handleCreateCommunity = (newCommunity: any) => {
+    const newId = Math.max(...communities.map(c => c.id)) + 1;
+    const communityCopy = {
+      id: newId,
+      name: newCommunity.name,
+      location: newCommunity.location,
+      bloodType: newCommunity.bloodType,
+      members: 1, // Starting with the creator
+      isJoined: true, // Auto-join when creating
+      activeRequests: 0,
+      lastActivity: "Just now"
+    };
+    
+    setCommunities(prev => [communityCopy, ...prev]);
+    setShowCreateModal(false);
+    
+    toast({
+      title: "Community Created",
+      description: `'${newCommunity.name}' has been created successfully!`
+    });
+  };
+  
   const filteredCommunities = communities.filter(community => 
     community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     community.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -139,23 +163,19 @@ const Communities = ({
   );
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-rose-50">
       <Navbar 
         isAuthenticated={isAuthenticated}
         onOpenAuthModal={onOpenAuthModal}
         onLogout={onLogout}
       />
-      <main className="flex-grow bg-gray-50 py-8">
+      <main className="flex-grow py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Blood Communities</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent">Blood Communities</h1>
             <Button 
-              onClick={() => {
-                toast({
-                  title: "Coming Soon",
-                  description: "Creating new communities will be available soon"
-                });
-              }}
+              onClick={() => setShowCreateModal(true)}
+              className="bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 transition-opacity"
             >
               <Users className="mr-2 h-4 w-4" />
               Create Community
@@ -188,6 +208,12 @@ const Communities = ({
         </div>
       </main>
       <Footer />
+      
+      <CreateCommunityModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreateCommunity={handleCreateCommunity}
+      />
     </div>
   );
 };

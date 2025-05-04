@@ -21,11 +21,11 @@ interface CommunityCardProps {
 
 const CommunityCard = ({ community, onJoin }: CommunityCardProps) => {
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-4 bg-gray-50 border-b">
+    <Card className="overflow-hidden hover-grow transition-all duration-300 hover:shadow-lg border border-white/50 bg-gradient-to-br from-white to-gray-50">
+      <CardHeader className="pb-4 bg-gradient-to-r from-primary/10 to-rose-500/10 border-b">
         <CardTitle className="flex justify-between items-start">
-          <span>{community.name}</span>
-          <div className="bg-red-50 px-2 py-1 rounded text-xs font-medium text-primary">
+          <span className="text-gradient-primary">{community.name}</span>
+          <div className="bg-gradient-to-r from-primary to-rose-500 text-white px-3 py-1 rounded-full text-xs font-medium">
             {community.bloodType}
           </div>
         </CardTitle>
@@ -33,16 +33,16 @@ const CommunityCard = ({ community, onJoin }: CommunityCardProps) => {
       <CardContent className="pt-6">
         <div className="space-y-4">
           <div className="flex items-center text-sm">
-            <Users className="h-4 w-4 mr-2 text-gray-500" />
+            <Users className="h-4 w-4 mr-2 text-primary" />
             <span>{community.members} members</span>
           </div>
           <div className="flex items-center text-sm">
-            <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+            <MapPin className="h-4 w-4 mr-2 text-primary" />
             <span>{community.location}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Active requests:</span>
-            <span className="font-medium">{community.activeRequests}</span>
+            <span className="font-medium text-primary">{community.activeRequests}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Last activity:</span>
@@ -50,9 +50,9 @@ const CommunityCard = ({ community, onJoin }: CommunityCardProps) => {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="bg-gray-50 border-t">
+      <CardFooter className="bg-gradient-to-r from-gray-50 to-gray-100 border-t">
         <Button 
-          className="w-full"
+          className={`w-full ${!community.isJoined ? 'bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 transition-opacity' : ''}`}
           variant={community.isJoined ? "outline" : "default"}
           onClick={() => onJoin(community.id)}
         >

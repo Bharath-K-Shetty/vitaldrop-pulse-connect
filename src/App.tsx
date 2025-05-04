@@ -19,8 +19,15 @@ interface AuthPageProps {
   isAuthenticated: boolean;
   onOpenAuthModal: () => void;
   onLogout: () => void;
-  pulseCredits?: number; 
-  onSendCredits?: (amount: number) => void;
+  pulseCredits: number; // Made this required to fix TS error
+  onSendCredits: (amount: number) => void; // Made this required to fix TS error
+}
+
+// Props for pages that don't need pulse credits
+interface BasicAuthPageProps {
+  isAuthenticated: boolean;
+  onOpenAuthModal: () => void;
+  onLogout: () => void;
 }
 
 const queryClient = new QueryClient();
@@ -70,6 +77,13 @@ const App = () => {
     onSendCredits: handleSendCredits
   };
   
+  // Props for pages that don't need pulse credits
+  const basicAuthProps: BasicAuthPageProps = {
+    isAuthenticated,
+    onOpenAuthModal: () => setShowAuthModal(true),
+    onLogout: handleLogout
+  };
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -88,21 +102,13 @@ const App = () => {
             <Route 
               path="/profile" 
               element={
-                <Profile 
-                  isAuthenticated={isAuthenticated}
-                  onOpenAuthModal={() => setShowAuthModal(true)}
-                  onLogout={handleLogout}
-                />
+                <Profile {...basicAuthProps} />
               } 
             />
             <Route 
               path="/communities" 
               element={
-                <Communities 
-                  isAuthenticated={isAuthenticated}
-                  onOpenAuthModal={() => setShowAuthModal(true)}
-                  onLogout={handleLogout}
-                />
+                <Communities {...basicAuthProps} />
               } 
             />
             <Route 
@@ -114,11 +120,7 @@ const App = () => {
             <Route 
               path="/emergency" 
               element={
-                <Emergency 
-                  isAuthenticated={isAuthenticated}
-                  onOpenAuthModal={() => setShowAuthModal(true)}
-                  onLogout={handleLogout}
-                />
+                <Emergency {...basicAuthProps} />
               } 
             />
             <Route path="*" element={<NotFound />} />

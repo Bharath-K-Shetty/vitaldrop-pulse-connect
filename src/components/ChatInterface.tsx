@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Heart } from "lucide-react";
+import { Send, Heart, X, User, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Message {
@@ -12,6 +12,8 @@ interface Message {
   content: string;
   timestamp: Date;
   isCurrentUser: boolean;
+  isPulseCredit?: boolean;
+  creditAmount?: number;
 }
 
 interface ChatInterfaceProps {
@@ -44,6 +46,7 @@ const ChatInterface = ({ communityName }: ChatInterfaceProps) => {
     }
   ]);
   const [showCreditInput, setShowCreditInput] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [creditAmount, setCreditAmount] = useState(1);
   const { toast } = useToast();
 
@@ -68,7 +71,9 @@ const ChatInterface = ({ communityName }: ChatInterfaceProps) => {
       sender: "You",
       content: `Sent ${creditAmount} Pulse Credit${creditAmount > 1 ? 's' : ''} to the community`,
       timestamp: new Date(),
-      isCurrentUser: true
+      isCurrentUser: true,
+      isPulseCredit: true,
+      creditAmount: creditAmount
     };
     
     setMessages([...messages, newMessage]);
@@ -85,32 +90,55 @@ const ChatInterface = ({ communityName }: ChatInterfaceProps) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Mock emoji list
+  const emojis = ["❤️", "👍", "🩸", "🏥", "🚑", "🙏", "🤝", "😊", "👋", "👨‍⚕️"];
+
   return (
-    <Card className="h-full max-h-[80vh] flex flex-col">
-      <CardHeader className="pb-2 border-b">
+    <Card className="h-full max-h-[80vh] flex flex-col bg-white border border-white/50 shadow-lg">
+      <CardHeader className="pb-2 border-b bg-gradient-to-r from-primary/10 to-rose-500/10">
         <CardTitle className="text-lg flex items-center gap-2">
           <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-          {communityName}
+          <span className="bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent font-bold">
+            {communityName}
+          </span>
+          <span className="text-xs text-gray-500 ml-auto font-normal flex items-center">
+            <Clock className="h-3 w-3 mr-1" />
+            Active now
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col h-full p-0">
-        <div className="flex-1 overflow-auto p-4 space-y-4">
+        <div className="flex-1 overflow-auto p-4 space-y-4 bg-gradient-to-br from-gray-50 to-rose-50/30">
           {messages.map((msg) => (
             <div 
               key={msg.id} 
               className={`flex ${msg.isCurrentUser ? 'justify-end' : 'justify-start'}`}
             >
+              {!msg.isCurrentUser && (
+                <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mr-2 mt-1">
+                  <User className="h-4 w-4 text-gray-600" />
+                </div>
+              )}
               <div 
-                className={`max-w-[80%] rounded-xl p-3 ${
+                className={`max-w-[80%] rounded-xl p-3 transition-all hover:shadow-md ${
                   msg.isCurrentUser 
-                    ? 'bg-primary text-white rounded-tr-none' 
-                    : 'bg-gray-100 rounded-tl-none'
+                    ? msg.isPulseCredit 
+                      ? 'bg-gradient-to-r from-rose-500 to-primary text-white rounded-tr-none' 
+                      : 'bg-gradient-to-r from-primary to-rose-500 text-white rounded-tr-none'
+                    : 'bg-white border border-gray-100 rounded-tl-none'
                 }`}
               >
                 {!msg.isCurrentUser && (
                   <p className="font-semibold text-sm">{msg.sender}</p>
                 )}
-                <p>{msg.content}</p>
+                {msg.isPulseCredit ? (
+                  <div className="flex items-center gap-2">
+                    <Heart className="h-5 w-5 text-white" />
+                    <p>{msg.content}</p>
+                  </div>
+                ) : (
+                  <p>{msg.content}</p>
+                )}
                 <p className={`text-xs mt-1 text-right ${msg.isCurrentUser ? 'text-white/70' : 'text-gray-500'}`}>
                   {formatTime(msg.timestamp)}
                 </p>
@@ -120,7 +148,7 @@ const ChatInterface = ({ communityName }: ChatInterfaceProps) => {
         </div>
         
         {showCreditInput ? (
-          <div className="p-3 border-t flex gap-2 items-center">
+          <div className="p-3 border-t bg-white flex gap-2 items-center">
             <Heart className="h-5 w-5 text-primary" />
             <div className="flex flex-col flex-1">
               <label className="text-sm font-medium mb-1">Send Pulse Credits</label>
@@ -132,28 +160,73 @@ const ChatInterface = ({ communityName }: ChatInterfaceProps) => {
                 onChange={(e) => setCreditAmount(parseInt(e.target.value) || 1)}
               />
             </div>
-            <Button onClick={handleSendCredit}>Send</Button>
+            <Button 
+              onClick={handleSendCredit}
+              className="bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 transition-opacity"
+            >
+              Send
+            </Button>
             <Button variant="outline" onClick={() => setShowCreditInput(false)}>Cancel</Button>
           </div>
         ) : (
-          <div className="p-3 border-t flex gap-2">
-            <Input 
-              placeholder="Type your message..." 
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            />
-            <Button size="icon" onClick={handleSendMessage}>
-              <Send className="h-4 w-4" />
-            </Button>
-            <Button 
-              size="icon" 
-              variant="outline" 
-              className="text-primary" 
-              onClick={() => setShowCreditInput(true)}
-            >
-              <Heart className="h-4 w-4" />
-            </Button>
+          <div className="p-3 border-t bg-white">
+            {showEmojiPicker && (
+              <div className="mb-2 p-2 bg-white rounded-lg border flex flex-wrap gap-2 relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white border"
+                  onClick={() => setShowEmojiPicker(false)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+                {emojis.map((emoji, index) => (
+                  <Button 
+                    key={index} 
+                    variant="ghost" 
+                    className="p-1 h-8 w-8"
+                    onClick={() => {
+                      setMessage(prev => prev + emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  >
+                    {emoji}
+                  </Button>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="text-gray-400 hover:text-gray-600"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              >
+                😊
+              </Button>
+              <Input 
+                placeholder="Type your message..." 
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                className="border-gray-200 focus:border-primary transition-colors"
+              />
+              <Button 
+                size="icon" 
+                onClick={handleSendMessage}
+                className="bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 transition-opacity"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="icon" 
+                variant="outline" 
+                className="text-primary border-primary hover:bg-primary/10" 
+                onClick={() => setShowCreditInput(true)}
+              >
+                <Heart className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
