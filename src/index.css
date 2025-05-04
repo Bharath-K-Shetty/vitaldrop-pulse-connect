@@ -141,4 +141,12 @@
   .hover-grow:hover {
     transform: scale(1.05);
   }
+  
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-rose-500;
+  }
 }
