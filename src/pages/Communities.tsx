@@ -1,5 +1,7 @@
+import { useState, useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,6 +11,8 @@ import CommunityCard from "@/components/CommunityCard";
 import CommunityFeed from "@/components/CommunityFeed";
 import CommunitySearch from "@/components/CommunitySearch";
 import CreateCommunityModal from "@/components/CreateCommunityModal";
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Mock data for communities
 const initialCommunities = [
@@ -99,52 +103,106 @@ interface CommunitiesProps {
   onLogout?: () => void;
 }
 
-const Communities = ({ 
-  isAuthenticated = false, 
-  onOpenAuthModal, 
-  onLogout 
+const Communities = ({
+  isAuthenticated = false,
+  onOpenAuthModal,
+  onLogout
 }: CommunitiesProps) => {
   const { toast } = useToast();
   const [communities, setCommunities] = useState(initialCommunities);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
-  
+
+  const communityFeedRef = useRef<HTMLDivElement | null>(null);
+  const communityRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!communityRef.current) return;
+
+    // GSAP ScrollTrigger animation for blur + fade in
+    gsap.fromTo(
+      communityRef.current,
+      { filter: "blur(6px)", opacity: 0.6, y: 50 },
+      {
+        filter: "blur(0px)",
+        opacity: 1,
+        y: 0,
+        ease: "power1.out",
+        scrollTrigger: {
+          trigger: communityRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+        },
+      }
+    );
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+
+
+  }, []);
+  useEffect(() => {
+    if (!communityFeedRef.current) return;
+
+    // GSAP ScrollTrigger animation for blur + fade in
+    gsap.fromTo(
+      communityFeedRef.current,
+      { filter: "blur(6px)", opacity: 0.6 },
+      {
+        filter: "blur(0px)",
+        opacity: 1,
+        ease: "power1.out",
+        scrollTrigger: {
+          trigger: communityFeedRef.current,
+          start: "top 80%",
+          end: "top 30%",
+          scrub: 1,
+        },
+      }
+    );
+
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+
+  }, []);
+
   const handleJoinCommunity = (id: number) => {
-    setCommunities(prev => 
-      prev.map(community => {
+    setCommunities((prev) =>
+      prev.map((community) => {
         if (community.id === id) {
-          // Reset unread messages to 0 when joining
           const isJoined = !community.isJoined;
-          return { 
-            ...community, 
+          return {
+            ...community,
             isJoined,
-            // Clear unread messages when leaving
-            unreadMessages: isJoined ? community.unreadMessages : undefined
+            unreadMessages: isJoined ? community.unreadMessages : undefined,
           };
         }
         return community;
       })
     );
-    
-    const community = communities.find(c => c.id === id);
-    
+
+    const community = communities.find((c) => c.id === id);
+
     toast({
       title: community?.isJoined ? "Left Community" : "Joined Community",
-      description: community?.isJoined 
+      description: community?.isJoined
         ? `You have left ${community.name}`
-        : `You have joined ${community.name}`
+        : `You have joined ${community.name}`,
     });
   };
-  
+
   const handlePostSubmit = (content: string) => {
     toast({
       title: "Post Shared",
-      description: "Your message has been shared with the community"
+      description: "Your message has been shared with the community",
     });
   };
-  
-  const handleCreateCommunity = (newCommunity: any) => {
-    const newId = Math.max(...communities.map(c => c.id)) + 1;
+
+  const handleCreateCommunity = (newCommunity) => {
+    const newId = Math.max(...communities.map((c) => c.id)) + 1;
     const communityCopy = {
       id: newId,
       name: newCommunity.name,
@@ -153,36 +211,39 @@ const Communities = ({
       members: 1, // Starting with the creator
       isJoined: true, // Auto-join when creating
       activeRequests: 0,
-      lastActivity: "Just now"
+      lastActivity: "Just now",
     };
-    
-    setCommunities(prev => [communityCopy, ...prev]);
+
+    setCommunities((prev) => [communityCopy, ...prev]);
     setShowCreateModal(false);
-    
+
     toast({
       title: "Community Created",
-      description: `'${newCommunity.name}' has been created successfully!`
+      description: `'${newCommunity.name}' has been created successfully!`,
     });
   };
-  
-  const filteredCommunities = communities.filter(community => 
-    community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    community.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    community.bloodType.toLowerCase().includes(searchTerm.toLowerCase())
+
+  const filteredCommunities = communities.filter(
+    (community) =>
+      community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      community.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      community.bloodType.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-rose-50">
-      <Navbar 
+      <Navbar
         isAuthenticated={isAuthenticated}
         onOpenAuthModal={onOpenAuthModal}
         onLogout={onLogout}
       />
-      <main className="flex-grow py-8">
+      <main className="flex-grow py-8 pt-20" ref={communityRef}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent">Blood Communities</h1>
-            <Button 
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-rose-500 bg-clip-text text-transparent">
+              Blood Communities
+            </h1>
+            <Button
               onClick={() => setShowCreateModal(true)}
               className="bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 transition-opacity"
             >
@@ -190,34 +251,33 @@ const Communities = ({
               Create Community
             </Button>
           </div>
-          
-          <CommunitySearch 
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-          />
-          
+
+          <CommunitySearch searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {filteredCommunities.map((community) => (
-              <CommunityCard 
-                key={community.id} 
-                community={community} 
-                onJoin={handleJoinCommunity} 
+              <CommunityCard
+                key={community.id}
+                community={community}
+                onJoin={handleJoinCommunity}
               />
             ))}
           </div>
-          
+
           {/* Community Feed for joined community */}
-          {communities.some(c => c.isJoined) && (
-            <CommunityFeed 
-              communityName="Downtown O+ Donors"
-              posts={communityPosts}
-              onPostSubmit={handlePostSubmit}
-            />
+          {communities.some((c) => c.isJoined) && (
+            <div ref={communityFeedRef}>
+              <CommunityFeed
+                communityName="Downtown O+ Donors"
+                posts={communityPosts}
+                onPostSubmit={handlePostSubmit}
+              />
+            </div>
           )}
         </div>
       </main>
       <Footer />
-      
+
       <CreateCommunityModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

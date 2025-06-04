@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Heart, Clock, User } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
 
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const urgencyLevels = ["Critical", "Urgent", "Standard"];
@@ -31,10 +36,39 @@ const Emergency = () => {
   const [hospital, setHospital] = useState("");
   const [patientName, setPatientName] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  
+
+
+  const emergencyBoardRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!emergencyBoardRef.current) return;
+
+    // GSAP ScrollTrigger animation for blur + fade in
+    gsap.fromTo(
+      emergencyBoardRef.current,
+      { filter: "blur(6px)", opacity: 0.6, y: 50 },
+      {
+        filter: "blur(0px)",
+        opacity: 1,
+        y: 0,
+        ease: "power1.out",
+        scrollTrigger: {
+          trigger: emergencyBoardRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+        },
+      }
+    );
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+
+
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!bloodType || !urgency || !location) {
       toast({
         title: "Missing Information",
@@ -43,32 +77,32 @@ const Emergency = () => {
       });
       return;
     }
-    
+
     toast({
       title: "Emergency Request Sent",
       description: "We are notifying nearby eligible donors"
     });
-    
+
     setHasSubmitted(true);
   };
-  
+
   const handleContactDonor = (id: number) => {
     const donor = nearbyDonors.find(d => d.id === id);
-    
+
     toast({
       title: "Donor Contacted",
       description: `${donor?.name} has been notified of your emergency request`
     });
   };
-  
-  const filteredDonors = nearbyDonors.filter(donor => 
+
+  const filteredDonors = nearbyDonors.filter(donor =>
     (!bloodType || donor.bloodType === bloodType) && donor.isAvailable
   );
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow bg-gray-50 py-8">
+      <main className="flex-grow bg-gray-50 py-8 pt-20" ref={emergencyBoardRef}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Emergency Blood Request</h1>
@@ -76,7 +110,7 @@ const Emergency = () => {
               Submit an emergency request and we'll notify eligible donors in your area immediately.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <Card>
@@ -88,7 +122,7 @@ const Emergency = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="patientName">Patient Name</Label>
-                        <Input 
+                        <Input
                           id="patientName"
                           placeholder="Name of patient"
                           value={patientName}
@@ -97,7 +131,7 @@ const Emergency = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="hospital">Hospital</Label>
-                        <Input 
+                        <Input
                           id="hospital"
                           placeholder="Hospital name"
                           value={hospital}
@@ -119,10 +153,10 @@ const Emergency = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="units">Units Required</Label>
-                        <Input 
-                          id="units" 
-                          type="number" 
-                          min="1" 
+                        <Input
+                          id="units"
+                          type="number"
+                          min="1"
                           placeholder="Number of units"
                           value={units}
                           onChange={(e) => setUnits(e.target.value)}
@@ -130,8 +164,8 @@ const Emergency = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="location">Location*</Label>
-                        <Input 
-                          id="location" 
+                        <Input
+                          id="location"
                           placeholder="City or address"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
@@ -151,22 +185,22 @@ const Emergency = () => {
                         </Select>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="notes">Additional Notes</Label>
-                      <Input 
-                        id="notes" 
+                      <Input
+                        id="notes"
                         placeholder="Any additional details about the emergency"
                       />
                     </div>
-                    
-                    <Button 
-                      type="submit" 
+
+                    <Button
+                      type="submit"
                       className="w-full bg-primary hover:bg-primary/90"
                     >
                       Submit Emergency Request
                     </Button>
-                    
+
                     <p className="text-sm text-gray-500 text-center">
                       By submitting, we'll alert nearby eligible donors with matching blood types.
                       <br />Fields marked with * are required.
@@ -175,7 +209,7 @@ const Emergency = () => {
                 </CardContent>
               </Card>
             </div>
-            
+
             <div className="lg:col-span-1">
               <Card>
                 <CardHeader className="pb-3">
@@ -220,8 +254,8 @@ const Emergency = () => {
                             <Clock className="h-3 w-3 mr-1" />
                             <span>Last donation: {donor.lastDonation}</span>
                           </div>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="w-full"
                             onClick={() => handleContactDonor(donor.id)}
                           >

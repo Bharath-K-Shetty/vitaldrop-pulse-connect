@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,13 +10,45 @@ import PulseCreditsCard from "@/components/PulseCreditsCard";
 import UpcomingDonation from "@/components/UpcomingDonation";
 import DonationHistory from "@/components/DonationHistory";
 import SendCreditsModal from "@/components/SendCreditsModal";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [pulseCredits, setPulseCredits] = useState(12);
   const [isEligible, setIsEligible] = useState(true);
   const [showSendCredits, setShowSendCredits] = useState(false);
-  
+
+  const dashBoardRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!dashBoardRef.current) return;
+
+    // GSAP ScrollTrigger animation for blur + fade in
+    gsap.fromTo(
+      dashBoardRef.current,
+      { filter: "blur(6px)", opacity: 0.6, y: 50 },
+      {
+        filter: "blur(0px)",
+        opacity: 1,
+        y: 0,
+        ease: "power1.out",
+        scrollTrigger: {
+          trigger: dashBoardRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+        },
+      }
+    );
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+
+
+  }, []);
+
   // Simulated emergency alert
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -26,10 +58,10 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }, 5000);
-    
+
     return () => clearTimeout(timeout);
   }, [toast]);
-  
+
   const handleDonateBlood = () => {
     if (isEligible) {
       setPulseCredits(prev => prev + 5);
@@ -38,7 +70,7 @@ const Dashboard = () => {
         title: "Thank you for donating!",
         description: "You've earned 5 Pulse Credits. You'll be eligible to donate again in 56 days.",
       });
-      
+
       // Simulate donation record being added to history
     } else {
       toast({
@@ -47,7 +79,7 @@ const Dashboard = () => {
       });
     }
   };
-  
+
   const handleSendCredits = (amount: number) => {
     setPulseCredits(prev => prev - amount);
     toast({
@@ -56,23 +88,23 @@ const Dashboard = () => {
     });
     setShowSendCredits(false);
   };
-  
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen w-full flex flex-col">
       <Navbar />
-      <main className="flex-grow bg-gray-50 py-8">
+      <main className="flex-grow bg-gray-50 py-8 pt-20" ref={dashBoardRef}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Dashboard</h1>
-          
+
           {/* Top cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <PulseCreditsCard 
-              credits={pulseCredits} 
+            <PulseCreditsCard
+              credits={pulseCredits}
               onSendCredits={() => setShowSendCredits(true)}
             />
-            
+
             <UpcomingDonation isEligible={isEligible} />
-            
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-medium">Emergency Alerts</CardTitle>
@@ -97,29 +129,29 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           {/* Quick actions */}
           <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
             <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex flex-col items-center justify-center h-24 border-2"
                 onClick={handleDonateBlood}
               >
                 <Heart className="h-6 w-6 mb-2 text-primary" />
                 <span>Donate Blood</span>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex flex-col items-center justify-center h-24 border-2"
                 onClick={() => setShowSendCredits(true)}
               >
                 <Send className="h-6 w-6 mb-2" />
                 <span>Send Credits</span>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex flex-col items-center justify-center h-24 border-2"
                 onClick={() => toast({
                   title: "Coming Soon",
@@ -129,8 +161,8 @@ const Dashboard = () => {
                 <Users className="h-6 w-6 mb-2" />
                 <span>Join Community</span>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex flex-col items-center justify-center h-24 border-2"
                 onClick={() => toast({
                   title: "Coming Soon",
@@ -142,15 +174,15 @@ const Dashboard = () => {
               </Button>
             </div>
           </div>
-          
+
           {/* Recent donation history */}
           <DonationHistory />
         </div>
       </main>
       <Footer />
-      
+
       {showSendCredits && (
-        <SendCreditsModal 
+        <SendCreditsModal
           isOpen={showSendCredits}
           onClose={() => setShowSendCredits(false)}
           creditBalance={pulseCredits}

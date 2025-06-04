@@ -1,10 +1,11 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Heart, Bell, User, LogOut } from "lucide-react";
-import { useState } from "react";
+import { Heart, Bell, User, LogOut, Wallet } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import SendCreditsModal from "./SendCreditsModal";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import gsap from "gsap";
 
 interface NavbarProps {
   isAuthenticated?: boolean;
@@ -14,17 +15,47 @@ interface NavbarProps {
   onSendCredits?: (amount: number) => void;
 }
 
-const Navbar = ({ 
-  isAuthenticated = false, 
-  onOpenAuthModal, 
+const Navbar = ({
+  isAuthenticated = false,
+  onOpenAuthModal,
   onLogout,
   pulseCredits = 0,
   onSendCredits
 }: NavbarProps) => {
+  const { setVisible } = useWalletModal();
+
   const [notifications, setNotifications] = useState(2);
   const [showSendCredits, setShowSendCredits] = useState(false);
   const { toast } = useToast();
-  
+
+  const navbarRef = useRef<HTMLDivElement>(null);
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  const [visible, setVisibled] = useState(true);
+
+  // Scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.pageYOffset;
+      const isScrollingUp = currentScrollPos < prevScrollPos;
+      setVisibled(isScrollingUp || currentScrollPos < 10);
+      setPrevScrollPos(currentScrollPos);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [prevScrollPos]);
+
+  // Animate navbar visibility
+  useEffect(() => {
+    if (navbarRef.current) {
+      gsap.to(navbarRef.current, {
+        y: visible ? 0 : -100,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    }
+  }, [visible]);
+
   const clearNotifications = () => {
     setNotifications(0);
     toast({
@@ -32,7 +63,7 @@ const Navbar = ({
       description: "All notifications have been marked as read"
     });
   };
-  
+
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
@@ -42,15 +73,30 @@ const Navbar = ({
       });
     }
   };
-  
+
   const handleSendCredits = (amount: number) => {
     if (onSendCredits) {
       onSendCredits(amount);
     }
   };
-  
+
+  const handleHoverEnter = (el: HTMLButtonElement | null) => {
+    if (el) {
+      gsap.to(el, { scale: 1.05, duration: 0.6, ease: "expo.in" });
+    }
+  };
+
+  const handleHoverLeave = (el: HTMLButtonElement | null) => {
+    if (el) {
+      gsap.to(el, { scale: 1.05, duration: 0.6, ease: "expo.out" });
+    }
+  };
+
   return (
-    <nav className="border-b sticky top-0 z-50 bg-white shadow-sm backdrop-blur-md bg-opacity-80">
+    <nav
+      ref={navbarRef}
+      className="border-b fixed top-0 z-50 w-full bg-white shadow-sm backdrop-blur-md bg-opacity-80 transition-transform"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -76,16 +122,23 @@ const Navbar = ({
           <div className="flex items-center space-x-4">
             {isAuthenticated && (
               <>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="hidden md:flex items-center gap-1 bg-red-50 border-red-100 text-primary hover:bg-red-100"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex items-center gap-1 bg-red-50 border-red-100 text-primary hover:bg-red-100 credit-count"
                   onClick={() => setShowSendCredits(true)}
+                  onMouseEnter={(e) => handleHoverEnter(e.currentTarget)}
+                  onMouseLeave={(e) => handleHoverLeave(e.currentTarget)}
                 >
                   <Heart className="h-4 w-4" />
                   <span>{pulseCredits} Credits</span>
                 </Button>
-                <Button variant="outline" size="icon" className="hidden md:flex relative" onClick={clearNotifications}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="hidden md:flex relative"
+                  onClick={clearNotifications}
+                >
                   <Bell className="h-5 w-5" />
                   {notifications > 0 && (
                     <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -103,28 +156,22 @@ const Navbar = ({
                 </Button>
               </>
             )}
-            
-            {!isAuthenticated ? (
-              <Button 
-                className="bg-primary text-white hover:bg-red-700 transition-colors"
-                onClick={onOpenAuthModal}
-              >
-                Sign In
-              </Button>
-            ) : (
-              <Button 
-                className="md:hidden bg-primary text-white hover:bg-red-700 transition-colors"
-                onClick={handleLogout}
-              >
-                Log Out
-              </Button>
-            )}
+
+            <Button
+              onClick={() => setVisible(true)}
+              onMouseEnter={(e) => handleHoverEnter(e.currentTarget)}
+              onMouseLeave={(e) => handleHoverLeave(e.currentTarget)}
+              className="group bg-primary text-white hover:bg-red-700"
+            >
+              <Wallet className="mr-2 hover:ml-[2px] hover:rotate-3 transition-all duration-300" />
+              Connect Wallet
+            </Button>
           </div>
         </div>
       </div>
-      
+
       {showSendCredits && (
-        <SendCreditsModal 
+        <SendCreditsModal
           isOpen={showSendCredits}
           onClose={() => setShowSendCredits(false)}
           creditBalance={pulseCredits || 0}
