@@ -2,10 +2,10 @@ import { useRef, useState, useEffect } from "react";
 
 const navLinks = [
   { name: "Home", path: "/" },
-  { name: "Dashboard", path: "/Dashboard" },
-  { name: "Communities", path: "/Communities" },
-  { name: "Emergency", path: "/Emergency" },
-  { name: "Profile", path: "/Profile" },
+  { name: "Dashboard", path: "/dashboard" },
+  { name: "Communities", path: "/communities" },
+  { name: "Emergency", path: "/emergency" },
+  { name: "Profile", path: "/profile" },
 ];
 
 export const AnimatedNavLinks = () => {
