@@ -15,18 +15,19 @@ import AuthModal from "./components/AuthModal";
 
 import {
   ConnectionProvider,
-  WalletProvider
+  WalletProvider,
+  useWallet
 } from "@solana/wallet-adapter-react";
-import {
-  WalletModalProvider
-} from "@solana/wallet-adapter-react-ui";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter
 } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import "@solana/wallet-adapter-react-ui/styles.css";
-// --- Interface Definitions ---
+
+import { supabase } from "./lib/supabase";
+
 interface AuthPageProps {
   isAuthenticated: boolean;
   onOpenAuthModal: () => void;
@@ -42,30 +43,69 @@ interface BasicAuthPageProps {
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const endpoint = clusterApiUrl("devnet");
-  const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
-
+const AppContent = () => {
+  const { publicKey, connected } = useWallet();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pulseCredits, setPulseCredits] = useState(12);
 
-  useEffect(() => {
-    const savedAuth = localStorage.getItem("vitaldrop-auth");
-    if (savedAuth) {
-      setIsAuthenticated(true);
+  const initializeUser = async () => {
+    if (!publicKey) return;
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("wallet_address", publicKey.toBase58());
+
+    if (!data || data.length === 0) {
+      const { error: insertError } = await supabase.from("users").insert([
+        {
+          wallet_address: publicKey.toBase58(),
+          name: "",
+          blood_group: "",
+          pulse_credits: 12,
+          hasDonated: false,
+          hasRequested: false
+        }
+      ]);
+      if (insertError) console.error("Insert error:", insertError);
+      else console.log("User successfully created!");
+    } else {
+      console.log("User already exists:", data[0]);
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    if (connected && publicKey) {
+      const key = `vitaldrop-auth-${publicKey.toBase58()}`;
+      const saved = localStorage.getItem(key);
+
+      if (saved) {
+        setIsAuthenticated(true);
+        initializeUser(); // now in scope
+      } else {
+        setShowAuthModal(true);
+      }
+    } else {
+      setIsAuthenticated(false);
+    }
+  }, [connected, publicKey]);
 
   const handleAuthSuccess = () => {
-    setIsAuthenticated(true);
-    localStorage.setItem("vitaldrop-auth", "true");
-    setShowAuthModal(false);
+    if (publicKey) {
+      const key = `vitaldrop-auth-${publicKey.toBase58()}`;
+      localStorage.setItem(key, "true");
+      setIsAuthenticated(true);
+      setShowAuthModal(false);
+      initializeUser(); // ✅ Now this works fine
+    }
   };
 
   const handleLogout = () => {
+    if (publicKey) {
+      localStorage.removeItem(`vitaldrop-auth-${publicKey.toBase58()}`);
+    }
     setIsAuthenticated(false);
-    localStorage.removeItem("vitaldrop-auth");
   };
 
   const handleSendCredits = (amount: number) => {
@@ -87,31 +127,42 @@ const App = () => {
   };
 
   return (
+    <>
+      <Toaster />
+      <Sonner />
+      <TooltipProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index {...authProps} />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile {...basicAuthProps} />} />
+            <Route path="/communities" element={<Communities {...basicAuthProps} />} />
+            <Route path="/communities/:id" element={<CommunityDetail {...basicAuthProps} />} />
+            <Route path="/emergency" element={<Emergency {...basicAuthProps} />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={handleAuthSuccess}
+        />
+      </TooltipProvider>
+    </>
+  );
+};
+
+const App = () => {
+  const endpoint = clusterApiUrl("devnet");
+  const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
+
+  return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index {...authProps} />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/profile" element={<Profile {...basicAuthProps} />} />
-                  <Route path="/communities" element={<Communities {...basicAuthProps} />} />
-                  <Route path="/communities/:id" element={<CommunityDetail {...basicAuthProps} />} />
-                  <Route path="/emergency" element={<Emergency {...basicAuthProps} />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-
-              <AuthModal
-                isOpen={showAuthModal}
-                onClose={() => setShowAuthModal(false)}
-                onSuccess={handleAuthSuccess}
-              />
-            </TooltipProvider>
+            <AppContent />
           </QueryClientProvider>
         </WalletModalProvider>
       </WalletProvider>

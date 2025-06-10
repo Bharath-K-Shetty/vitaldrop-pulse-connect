@@ -1,5 +1,5 @@
-
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,10 @@ const Dashboard = () => {
   const [isEligible, setIsEligible] = useState(true);
   const [showSendCredits, setShowSendCredits] = useState(false);
 
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate("/communities");
+  };
   const dashBoardRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!dashBoardRef.current) return;
@@ -153,10 +157,13 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 className="flex flex-col items-center justify-center h-24 border-2"
-                onClick={() => toast({
-                  title: "Coming Soon",
-                  description: "This feature will be available soon"
-                })}
+                onClick={() => {
+                  toast({
+                    title: "Coming Soon",
+                    description: "This feature will be available soon"
+                  });
+                  handleClick();
+                }}
               >
                 <Users className="h-6 w-6 mb-2" />
                 <span>Join Community</span>
@@ -178,18 +185,20 @@ const Dashboard = () => {
           {/* Recent donation history */}
           <DonationHistory />
         </div>
-      </main>
+      </main >
       <Footer />
 
-      {showSendCredits && (
-        <SendCreditsModal
-          isOpen={showSendCredits}
-          onClose={() => setShowSendCredits(false)}
-          creditBalance={pulseCredits}
-          onSendCredits={handleSendCredits}
-        />
-      )}
-    </div>
+      {
+        showSendCredits && (
+          <SendCreditsModal
+            isOpen={showSendCredits}
+            onClose={() => setShowSendCredits(false)}
+            creditBalance={pulseCredits}
+            onSendCredits={handleSendCredits}
+          />
+        )
+      }
+    </div >
   );
 };
 

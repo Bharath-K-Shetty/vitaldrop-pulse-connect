@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -10,10 +9,19 @@ import { useToast } from "@/hooks/use-toast";
 import { User, Heart, MapPin, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// ✅ Add this interface for props
+interface BasicAuthPageProps {
+  isAuthenticated: boolean;
+  onOpenAuthModal: () => void;
+  onLogout: () => void;
+}
+
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-const Profile = () => {
+// ✅ Accept props in component definition
+const Profile = ({ isAuthenticated, onOpenAuthModal, onLogout }: BasicAuthPageProps) => {
   const { toast } = useToast();
+
   const [profile, setProfile] = useState({
     name: "John Doe",
     email: "john.doe@example.com",
@@ -24,16 +32,16 @@ const Profile = () => {
     phone: "555-123-4567",
     isVerified: true
   });
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
   };
-  
+
   const handleBloodTypeChange = (value: string) => {
     setProfile(prev => ({ ...prev, bloodType: value }));
   };
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
@@ -41,27 +49,27 @@ const Profile = () => {
       description: "Your profile has been updated successfully"
     });
   };
-  
+
   const handleSendCredits = () => {
     toast({
       title: "Feature Coming Soon",
       description: "Credit transfer will be available in the next update"
     });
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow bg-gray-50 py-8">
+      <main className="flex-grow bg-gray-50 py-8 pt-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Your Profile</h1>
             <Button variant="outline" onClick={handleSendCredits}>
-              <Send className="mr-2 h-4 w-4" /> 
+              <Send className="mr-2 h-4 w-4" />
               Send Credits
             </Button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card className="md:col-span-1">
               <CardContent className="pt-6">
@@ -71,20 +79,20 @@ const Profile = () => {
                   </div>
                   <h2 className="text-xl font-semibold">{profile.name}</h2>
                   <p className="text-gray-500">{profile.email}</p>
-                  
+
                   <div className="flex items-center mt-2">
                     <div className="flex items-center bg-red-50 px-3 py-1 rounded-full">
                       <Heart className="h-4 w-4 text-primary mr-1" />
                       <span className="text-sm font-medium text-primary">{profile.bloodType}</span>
                     </div>
-                    
+
                     {profile.isVerified && (
                       <div className="ml-2 bg-green-50 px-3 py-1 rounded-full">
                         <span className="text-sm font-medium text-green-600">Verified</span>
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="mt-4 flex items-center text-sm text-gray-500">
                     <MapPin className="h-4 w-4 mr-1" />
                     <span>{profile.address}</span>
@@ -92,7 +100,7 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
@@ -102,7 +110,7 @@ const Profile = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
-                      <Input 
+                      <Input
                         id="name"
                         name="name"
                         value={profile.name}
@@ -111,7 +119,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input 
+                      <Input
                         id="email"
                         name="email"
                         type="email"
@@ -121,7 +129,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone</Label>
-                      <Input 
+                      <Input
                         id="phone"
                         name="phone"
                         value={profile.phone}
@@ -143,7 +151,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="weight">Weight (kg)</Label>
-                      <Input 
+                      <Input
                         id="weight"
                         name="weight"
                         value={profile.weight}
@@ -152,7 +160,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastHemoglobin">Last Hemoglobin (g/dL)</Label>
-                      <Input 
+                      <Input
                         id="lastHemoglobin"
                         name="lastHemoglobin"
                         value={profile.lastHemoglobin}
@@ -161,7 +169,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="address">Address</Label>
-                      <Input 
+                      <Input
                         id="address"
                         name="address"
                         value={profile.address}
@@ -169,7 +177,7 @@ const Profile = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <Button type="submit" className="w-full">
                     Save Changes
                   </Button>

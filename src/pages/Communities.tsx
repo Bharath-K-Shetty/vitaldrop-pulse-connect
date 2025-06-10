@@ -115,7 +115,10 @@ const Communities = ({
 
   const communityFeedRef = useRef<HTMLDivElement | null>(null);
   const communityRef = useRef<HTMLElement | null>(null);
-
+  useEffect(() => {
+    // Scroll to top of the page when the component mounts
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
   useEffect(() => {
     if (!communityRef.current) return;
 

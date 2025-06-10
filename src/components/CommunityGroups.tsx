@@ -2,6 +2,7 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const bloodGroups = [
   { type: "O+", members: 8427, icon: "🩸", color: "bg-red-100", requests: 24 },
@@ -13,6 +14,12 @@ const bloodGroups = [
 ];
 
 const CommunityGroups = () => {
+  const navigate = useNavigate();
+
+  const handleJoin = () => {
+    navigate("/communities");
+  };
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,7 +29,7 @@ const CommunityGroups = () => {
             Join a community based on your blood type to connect with donors and recipients.
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {bloodGroups.map((group, index) => (
             <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow duration-300">
@@ -38,7 +45,7 @@ const CommunityGroups = () => {
                     <span>{group.members.toLocaleString()}</span>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3 mb-4">
                   <div>
                     <p className="text-sm text-gray-500">Active requests</p>
@@ -53,7 +60,7 @@ const CommunityGroups = () => {
                 </div>
               </CardContent>
               <CardFooter className="bg-gray-50 border-t px-6 py-4">
-                <Button className="w-full">Join Community</Button>
+                <Button className="w-full" onClick={handleJoin}>Join Community</Button>
               </CardFooter>
             </Card>
           ))}
